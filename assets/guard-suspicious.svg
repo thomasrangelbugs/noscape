@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#977748"/>
+      <stop offset="1" stop-color="#4b351d"/>
+    </linearGradient>
+    <linearGradient id="helmet" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eee2c7"/>
+      <stop offset="1" stop-color="#b69d74"/>
+    </linearGradient>
+    <linearGradient id="visor" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffe9bd"/>
+      <stop offset="1" stop-color="#e1b15f"/>
+    </linearGradient>
+  </defs>
+
+  <ellipse cx="48" cy="80" rx="22" ry="7" fill="#050c12" fill-opacity="0.55"/>
+
+  <rect x="22" y="42" width="8" height="20" rx="3" fill="#4b371f"/>
+  <rect x="66" y="42" width="8" height="20" rx="3" fill="#4b371f"/>
+
+  <circle cx="48" cy="50" r="17" fill="url(#body)" stroke="#2d2113" stroke-width="2.8"/>
+  <circle cx="48" cy="31" r="12" fill="url(#helmet)" stroke="#2d2113" stroke-width="2.4"/>
+
+  <rect x="40" y="27" width="20" height="8" rx="3" fill="url(#visor)" stroke="#dfad58" stroke-opacity="0.8" stroke-width="1"/>
+  <rect x="42" y="28" width="6" height="6" rx="2" fill="#fff9eb" fill-opacity="0.4"/>
+
+  <rect x="40" y="43" width="16" height="11" rx="3" fill="#4b3418"/>
+  <rect x="47" y="43" width="3" height="11" rx="1" fill="#ffe5ab"/>
+
+  <path d="M58 47 L74 42 L74 52 Z" fill="#ffe6b8"/>
+  <circle cx="74" cy="47" r="2.2" fill="#ffe6b6"/>
+
+  <rect x="38" y="62" width="7" height="9" rx="2" fill="#372714"/>
+  <rect x="51" y="62" width="7" height="9" rx="2" fill="#372714"/>
+</svg>

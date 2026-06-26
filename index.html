@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="description" content="Stealth Ops — infiltração procedural no navegador. Jogue no PC ou celular." />
+  <meta name="theme-color" content="#071018" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Stealth Ops - Procedural Loop</title>
+  <link rel="icon" href="assets/sprites/capa.png" type="image/png" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css?v=20260624" />
+</head>
+<body>
+  <div class="wrap">
+    <section class="stage">
+      <div class="stage-viewport">
+        <canvas id="c" width="960" height="540"></canvas>
+      </div>
+
+      <div class="mobile-play-gate hidden" id="mobilePlayGate" aria-hidden="true">
+        <div class="mobile-play-gate-card">
+          <div class="mobile-play-gate-title">Stealth Ops</div>
+          <button class="mobile-play-btn" id="mobilePlayBtn" type="button">JOGAR</button>
+          <p class="mobile-play-gate-step" id="mobilePlayStep">Toque 1/2 para iniciar</p>
+          <button class="mobile-play-menu-link" id="mobilePlayMenuBtn" type="button">Menu completo</button>
+        </div>
+      </div>
+
+      <div class="mobile-controls hidden" id="mobileControls">
+        <div class="joystick" id="joyPad">
+          <div class="joy-ring"></div>
+          <div class="joy-stick" id="joyStick"></div>
+        </div>
+
+        <button class="touch-start-btn hidden" id="touchStart" type="button" aria-label="Menu de pausa">START</button>
+
+        <div class="touch-actions">
+          <div class="touch-action-bar layout-operative" id="touchActionBar">
+            <button class="touch-btn action-btn action-run" data-action="run" id="touchRun">Correr</button>
+            <button class="touch-btn action-btn action-crouch" data-action="crouch" id="touchCrouch">Agachar</button>
+            <button class="touch-btn action-btn action-primary" data-action="shoot" id="touchShoot">Soco</button>
+            <button class="touch-btn action-btn action-hammer hidden" data-action="hammer" id="touchHammer">Mjolnir</button>
+            <button class="touch-btn action-btn action-reload" data-action="reload" id="touchReload">Rec.</button>
+            <button class="touch-btn action-btn action-switch" data-action="switch" id="touchSwitch">Arma</button>
+            <button class="touch-btn action-btn action-use" data-action="use" id="touchUse">Usar</button>
+            <button class="touch-btn action-btn action-lure" data-action="lure" id="touchLure">Isca</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="orientation-gate hidden" id="orientationGate" aria-hidden="true">
+        <div class="orientation-gate-card">
+          <div class="orientation-gate-title">JOGUE NO MODO PAISAGEM</div>
+          <div class="orientation-gate-text">Gire o celular para o lado e continue em tela cheia.</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <div class="title">Stealth Ops // Procedural Loop</div>
+
+      <div class="stats">
+        <div class="metric"><span>Fase</span><b id="phaseTxt">1</b></div>
+        <div class="metric"><span>Respawns</span><b id="livesTxt">INF</b></div>
+        <div class="metric"><span>Pontos</span><b id="scoreTxt">0</b></div>
+        <div class="metric"><span>Tempo</span><b id="timeTxt">0:00</b></div>
+        <div class="metric"><span>Munição</span><b id="ammoTxt">--</b></div>
+        <div class="metric"><span>Isca</span><b id="lureCdTxt">OK</b></div>
+      </div>
+
+      <div class="row">
+        <div class="stat"><span>Visibilidade</span><span id="visTxt">0%</span></div>
+        <div class="bar ok"><div id="visBar"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="stat"><span>Barulho</span><span id="noiTxt">0%</span></div>
+        <div class="bar warn"><div id="noiBar"></div></div>
+      </div>
+
+      <div class="row">
+        <div class="stat"><span>Status</span><span id="statusTxt" class="status">MENU</span></div>
+      </div>
+
+      <div class="row">
+        <div class="stat"><span>Secundários</span><span id="objTxt">0/0</span></div>
+      </div>
+
+      <div class="row seed-line">
+        Seed atual: <span id="seedTxt">AUTO</span>
+      </div>
+
+      <div class="row small" id="hint">
+        Abra o menu para iniciar a operação. Cada fase é gerada aleatoriamente.
+      </div>
+
+      <div class="row btn-grid">
+        <button id="startBtn">Nova Run</button>
+        <button id="pauseBtn">Pausar</button>
+        <button id="menuBtn">Menu</button>
+        <button id="settingsBtn">Configurações</button>
+        <button class="compact" id="shareRunBtn" type="button">Compartilhar run</button>
+        <button id="fullscreenBtn">Tela Cheia</button>
+      </div>
+
+      <div class="row small" id="controlsTxt">
+        <div><span class="k">W A S D</span> ou <span class="k">Setas</span> mover</div>
+        <div><span class="k">Shift</span> correr</div>
+        <div><span class="k">C</span> agachar</div>
+        <div><span class="k">E</span> jogar isca</div>
+        <div><span class="k">F</span> usar / pegar / trocar</div>
+        <div><span class="k">Q</span> atirar / faca / soco</div>
+        <div><span class="k">X</span> trocar faca / W1 / W2</div>
+        <div><span class="k">P</span> / <span class="k">Esc</span> pause</div>
+        <div><span class="k">F11</span> tela cheia</div>
+        <div><span class="k">R</span> recarregar</div>
+      </div>
+
+      <div class="row small">Ranking local</div>
+      <ol class="rank-list small empty" id="rankList"></ol>
+      <div class="rank-actions">
+        <button class="compact" id="clearRankBtn">Limpar Ranking</button>
+      </div>
+
+      <div class="row small">Conquistas</div>
+      <ol class="achievements-list small" id="achievementsList"></ol>
+    </aside>
+  </div>
+
+  <div class="modal hidden" id="gamePauseModal" aria-hidden="true">
+    <div class="re3-pause-card">
+      <div class="re3-pause-header">PAUSA</div>
+      <div class="re3-pause-grid">
+        <div class="re3-portrait-panel">
+          <div class="re3-portrait-frame">
+            <img src="assets/sprites/agente.png" alt="Agente" id="pausePortrait" />
+          </div>
+          <div class="cardiac-monitor re3-cardio" id="cardioMonitor" aria-hidden="false">
+            <div class="cardiac-label">ECG</div>
+            <div class="cardiac-readout">
+              <span id="cardioBpm">72</span>
+              <span id="cardioState">OK</span>
+            </div>
+            <svg viewBox="0 0 80 48" preserveAspectRatio="xMidYMid meet">
+              <path class="cardiac-baseline" d="M0 24 H80"></path>
+              <g class="cardiac-wave-track">
+                <path class="cardiac-wave" d="M0 24 L8 24 L11 24 L14 8 L17 38 L20 14 L23 24 L40 24"></path>
+                <path class="cardiac-wave" d="M40 24 L48 24 L51 24 L54 8 L57 38 L60 14 L63 24 L80 24"></path>
+                <path class="cardiac-wave" d="M80 24 L88 24 L91 24 L94 8 L97 38 L100 14 L103 24 L120 24"></path>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="re3-status-panel">
+          <div class="re3-stat-line"><span>Fase</span><b id="pausePhase">1</b></div>
+          <div class="re3-stat-line"><span>Respawns</span><b id="pauseLives">INF</b></div>
+          <div class="re3-stat-line"><span>Pontos</span><b id="pauseScore">0</b></div>
+          <div class="re3-stat-line"><span>Tempo</span><b id="pauseTime">0:00</b></div>
+          <div class="re3-stat-line"><span>Visibilidade</span><b id="pauseVis">0%</b></div>
+          <div class="re3-stat-line"><span>Barulho</span><b id="pauseNoi">0%</b></div>
+          <div class="re3-inventory">
+            <div class="re3-inv-title">INVENTÁRIO</div>
+            <ul class="re3-inv-list" id="pauseInventory"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="re3-pause-actions">
+        <button id="pauseResumeBtn">Retomar</button>
+        <button id="pauseMenuBtn">Menu</button>
+        <button id="pauseExitBtn">Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="menuModal">
+    <div class="modal-card menu-wizard" id="menuCard">
+
+      <section class="menu-screen menu-screen-cover" data-screen="cover">
+        <div class="menu-cover">
+          <img class="menu-cover-img" src="assets/sprites/capa.png" alt="Stealth Ops" />
+        </div>
+        <button class="menu-big-btn" id="menuCoverBtn" type="button">Iniciar</button>
+      </section>
+
+      <section class="menu-screen menu-screen-home hidden" data-screen="home">
+        <h2 class="menu-h">Stealth Ops</h2>
+        <p class="menu-sub">Procedural Loop</p>
+        <div class="menu-tower">
+          <button class="menu-tower-btn primary" id="towerPlayBtn" type="button">Começar</button>
+          <button class="menu-tower-btn quick-play" id="quickPlayBtn" type="button">Jogar rápido</button>
+          <button class="menu-tower-btn" id="menuResumeBtn" type="button" disabled>Continuar</button>
+          <button class="menu-tower-btn" id="towerMenuBtn" type="button">Mercado Negro</button>
+          <button class="menu-tower-btn" id="menuSettingsBtn" type="button">Configurações</button>
+        </div>
+        <div class="menu-daily-challenge">
+          <div class="small" id="dailyChallengeLabel">Desafio diário</div>
+          <button class="menu-tower-btn daily" id="dailyChallengeBtn" type="button">Jogar desafio do dia</button>
+        </div>
+        <div class="menu-home-achievements">
+          <div class="small">Conquistas</div>
+          <ol class="achievements-list small empty" id="menuAchievementsList"></ol>
+        </div>
+        <button class="menu-link" id="menuFullscreenBtn" type="button">Tela cheia</button>
+      </section>
+
+      <section class="menu-screen hidden" data-screen="family">
+        <h2 class="menu-h">Escolha o modo</h2>
+        <p class="menu-sub">Como você quer jogar?</p>
+        <div class="menu-wizard-deck menu-wizard-deck-2" role="group" aria-label="Família de jogo">
+          <div class="menu-wizard-card menu-wizard-agent" data-menu-family="agent" role="button" tabindex="0" aria-pressed="true">
+            <span class="menu-wizard-art"><img src="assets/sprites/agente.png" alt="" /></span>
+            <span class="menu-wizard-copy">
+              <span class="menu-wizard-name">Agente</span>
+              <span class="menu-wizard-line">Infiltração furtiva, objetivos e extração silenciosa.</span>
+            </span>
+          </div>
+          <div class="menu-wizard-card menu-wizard-supers" data-menu-family="supers" role="button" tabindex="0" aria-pressed="false">
+            <span class="menu-wizard-art"><img src="assets/sprites/homelander.png" alt="" /></span>
+            <span class="menu-wizard-copy">
+              <span class="menu-wizard-name">Supers</span>
+              <span class="menu-wizard-line">Homelander, Butcher ou Thor — poder total e hordas.</span>
+            </span>
+          </div>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-nav-back" id="familyBackBtn" type="button">Voltar</button>
+          <button class="menu-big-btn" id="familyNextBtn" type="button">Próximo</button>
+        </div>
+      </section>
+
+      <section class="menu-screen hidden" data-screen="runtype">
+        <h2 class="menu-h">Formato da run</h2>
+        <p class="menu-sub" id="menuRunTypeSub">Campanha com fases ou Survivor sem parar.</p>
+        <div class="menu-wizard-deck menu-wizard-deck-2" role="group" aria-label="Tipo de partida">
+          <div class="menu-wizard-card menu-wizard-campaign" data-run-type="campaign" role="button" tabindex="0" aria-pressed="true">
+            <span class="menu-wizard-icon" aria-hidden="true">▣</span>
+            <span class="menu-wizard-copy">
+              <span class="menu-wizard-name">Campanha</span>
+              <span class="menu-wizard-line">Fases com objetivos, progressão e Nemesis.</span>
+            </span>
+          </div>
+          <div class="menu-wizard-card menu-wizard-survivor" data-run-type="survivor" role="button" tabindex="0" aria-pressed="false">
+            <span class="menu-wizard-icon" aria-hidden="true">∞</span>
+            <span class="menu-wizard-copy">
+              <span class="menu-wizard-name">Survivor</span>
+              <span class="menu-wizard-line">Ondas infinitas, upgrades e sobrevivência.</span>
+            </span>
+          </div>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-nav-back" id="runtypeBackBtn" type="button">Voltar</button>
+          <button class="menu-big-btn" id="runtypeNextBtn" type="button">Próximo</button>
+        </div>
+      </section>
+
+      <section class="menu-screen hidden" data-screen="scenario">
+        <h2 class="menu-h">Cenário inimigo</h2>
+        <p class="menu-sub">Contra quem você luta nesta operação?</p>
+        <div class="menu-mode-deck menu-scenario-deck" id="menuScenarioDeck" role="group" aria-label="Cenário inimigo">
+          <div class="menu-mode-card menu-mode-agent menu-scenario-card" data-scenario-mode="agent" role="button" tabindex="0" aria-pressed="true">
+            <button class="menu-mode-lore-btn" type="button" aria-label="História do modo Agentes">?</button>
+            <span class="menu-mode-art"><img src="assets/sprites/agente.png" alt="" /></span>
+            <span class="menu-mode-copy">
+              <span class="menu-mode-name">Agentes</span>
+              <span class="menu-mode-line">Patrulhas táticas, rádio e armas cedo.</span>
+            </span>
+          </div>
+          <div class="menu-mode-card menu-mode-zombie menu-scenario-card" data-scenario-mode="zombie" role="button" tabindex="0" aria-pressed="false">
+            <button class="menu-mode-lore-btn" type="button" aria-label="História do modo Zumbis">?</button>
+            <span class="menu-mode-art"><img src="assets/sprites/zumbi.png" alt="" /></span>
+            <span class="menu-mode-copy">
+              <span class="menu-mode-name">Zumbis</span>
+              <span class="menu-mode-line">Horda, neblina e audição aguçada.</span>
+            </span>
+          </div>
+          <div class="menu-mode-card menu-mode-clown menu-scenario-card" data-scenario-mode="clown" role="button" tabindex="0" aria-pressed="false">
+            <button class="menu-mode-lore-btn" type="button" aria-label="História do modo Palhaços">?</button>
+            <span class="menu-mode-art"><img src="assets/sprites/palhaco.png" alt="" /></span>
+            <span class="menu-mode-copy">
+              <span class="menu-mode-name">Palhaços</span>
+              <span class="menu-mode-line">Poucos, rápidos e perseguição implacável.</span>
+            </span>
+          </div>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-nav-back" id="scenarioBackBtn" type="button">Voltar</button>
+          <button class="menu-big-btn" id="scenarioNextBtn" type="button">Próximo</button>
+        </div>
+      </section>
+
+      <section class="menu-screen hidden" data-screen="character">
+        <h2 class="menu-h">Escolha o super</h2>
+        <p class="menu-sub">Quem vai liderar a operação?</p>
+        <div class="menu-mode-deck menu-character-deck" id="menuCharacterDeck" role="group" aria-label="Personagem super">
+          <div class="menu-mode-card menu-mode-homelander menu-character-card" data-super-mode="homelander" role="button" tabindex="0" aria-pressed="false">
+            <button class="menu-mode-lore-btn" type="button" aria-label="História do Homelander">?</button>
+            <span class="menu-mode-art"><img src="assets/sprites/homelander.png" alt="" /></span>
+            <span class="menu-mode-copy">
+              <span class="menu-mode-name">Homelander</span>
+              <span class="menu-mode-line">Laser, voo e invulnerabilidade total.</span>
+            </span>
+          </div>
+          <div class="menu-mode-card menu-mode-butcher menu-character-card" data-super-mode="butcher" role="button" tabindex="0" aria-pressed="false">
+            <button class="menu-mode-lore-btn" type="button" aria-label="História do Butcher">?</button>
+            <span class="menu-mode-art"><img src="assets/sprites/Butcher.png" alt="" /></span>
+            <span class="menu-mode-copy">
+              <span class="menu-mode-name">Butcher</span>
+              <span class="menu-mode-line">Dash, tentáculos e Composto V.</span>
+            </span>
+          </div>
+          <div class="menu-mode-card menu-mode-thor menu-character-card" data-super-mode="thor" role="button" tabindex="0" aria-pressed="false">
+            <button class="menu-mode-lore-btn" type="button" aria-label="História do Thor">?</button>
+            <span class="menu-mode-art"><img src="assets/sprites/thor_parado.png" alt="" /></span>
+            <span class="menu-mode-copy">
+              <span class="menu-mode-name">Thor</span>
+              <span class="menu-mode-line">Laser, Mjolnir, voo e tempestade.</span>
+            </span>
+          </div>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-nav-back" id="characterBackBtn" type="button">Voltar</button>
+          <button class="menu-big-btn" id="characterNextBtn" type="button">Próximo</button>
+        </div>
+      </section>
+
+      <section class="menu-screen hidden" data-screen="difficulty">
+        <h2 class="menu-h">Dificuldade</h2>
+        <p class="menu-sub">Quão desafiador será esta partida?</p>
+        <div class="menu-level-pick">
+          <label>Dificuldade
+            <select id="menuDifficultySelect">
+              <option value="casual">Casual</option>
+              <option value="operation">Operacional</option>
+              <option value="hardcore">Hardcore</option>
+            </select>
+          </label>
+          <div class="small" id="menuDifficultyHint">Balanceamento padrão.</div>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-nav-back" id="difficultyBackBtn" type="button">Voltar</button>
+          <button class="menu-big-btn" id="difficultyNextBtn" type="button">Próximo</button>
+        </div>
+      </section>
+
+      <section class="menu-screen hidden" data-screen="level">
+        <h2 class="menu-h">Escolha a fase</h2>
+        <p class="menu-sub" id="menuLevelSub">Selecione em qual fase começar.</p>
+        <div class="menu-level-pick">
+          <label>Fase
+            <select id="menuLevelSelect"></select>
+          </label>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-nav-back" id="levelBackBtn" type="button">Voltar</button>
+          <button class="menu-big-btn" id="menuStartRunBtn" type="button">Jogar</button>
+        </div>
+      </section>
+
+      <section class="menu-screen hidden" data-screen="records">
+        <h2 class="menu-h">Mercado Negro</h2>
+        <p class="menu-sub">Loja de armas e upgrades</p>
+        <div class="menu-summary">
+          <span id="menuCredits">Créditos: 0</span>
+          <span id="menuLoadout">Início: Pistola</span>
+        </div>
+        <div class="menu-records-grid">
+          <div class="menu-shop">
+            <div class="menu-shop-head">
+              <span>Arsenal</span>
+              <span id="shopFeedback">Compre e selecione 1 item.</span>
+            </div>
+            <div class="shop-carousel" id="shopCarousel">
+              <button class="shop-carousel-nav prev" id="shopPrevBtn" type="button" aria-label="Arma anterior">‹</button>
+              <div class="shop-carousel-stage" id="shopCarouselStage">
+                <div class="shop-grid" id="shopGrid"></div>
+              </div>
+              <button class="shop-carousel-nav next" id="shopNextBtn" type="button" aria-label="Próxima arma">›</button>
+              <div class="shop-carousel-meta">
+                <span class="shop-carousel-counter" id="shopCarouselCounter">1 / 1</span>
+              </div>
+            </div>
+          </div>
+          <div class="menu-best-field">
+            <div class="menu-best-title">Melhores tempos por fase</div>
+            <ol class="best-times" id="bestTimesList"></ol>
+          </div>
+        </div>
+        <div class="menu-nav">
+          <button class="menu-nav-back" id="recordsBackBtn" type="button">Voltar</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="modal hidden" id="settingsModal">
+    <div class="modal-card">
+      <h2>Configurações</h2>
+
+      <div class="grid">
+        <div>
+          <div class="field">
+            <label>Volume geral
+              <input type="range" min="0" max="100" value="60" id="masterVolume" />
+            </label>
+          </div>
+          <div class="field">
+            <label>Volume ambiente
+              <input type="range" min="0" max="100" value="45" id="musicVolume" />
+            </label>
+          </div>
+          <div class="field">
+            <label>Sons SFX
+              <select id="sfxEnabled">
+                <option value="on">Ativado</option>
+                <option value="off">Desativado</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <div class="field">
+            <label>Música ambiente
+              <select id="musicEnabled">
+                <option value="on">Ativada</option>
+                <option value="off">Desativada</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Qualidade visual
+              <select id="qualityMode">
+                <option value="high">Alta (adapta no celular)</option>
+                <option value="medium">Média</option>
+                <option value="low">Baixa</option>
+              </select>
+            </label>
+            <div class="small">No celular, &quot;Alta&quot; limita efeitos automaticamente para manter FPS.</div>
+          </div>
+          <div class="field">
+            <label>Dificuldade
+              <select id="difficultyMode">
+                <option value="casual">Casual</option>
+                <option value="operation">Operacional</option>
+                <option value="hardcore">Hardcore</option>
+              </select>
+            </label>
+            <div class="small" id="difficultyHint">Balanceamento padrão.</div>
+          </div>
+          <div class="field">
+            <label>Modo daltônico (cones de visão)
+              <select id="colorblindMode">
+                <option value="normal">Normal</option>
+                <option value="protanopia">Protanopia</option>
+                <option value="deuteranopia">Deuteranopia</option>
+                <option value="tritanopia">Tritanopia</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Controles touch
+              <select id="touchMode">
+                <option value="auto">Auto</option>
+                <option value="on">Sempre ativo</option>
+                <option value="off">Desativado</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Mão dominante
+              <select id="handedness">
+                <option value="right">Destro</option>
+                <option value="left">Canhoto</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Layout dos botões
+              <select id="touchLayout">
+                <option value="compact">Compacto</option>
+                <option value="comfortable">Confortável</option>
+                <option value="tablet">Tablet</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Offset botões (horizontal)
+              <input type="range" min="-40" max="40" value="0" id="touchBtnOffsetX" />
+            </label>
+            <div class="small slider-value" id="touchBtnOffsetXValue">0px</div>
+          </div>
+          <div class="field">
+            <label>Offset botões (vertical)
+              <input type="range" min="-40" max="40" value="0" id="touchBtnOffsetY" />
+            </label>
+            <div class="small slider-value" id="touchBtnOffsetYValue">0px</div>
+          </div>
+          <div class="field">
+            <label>Vibração tátil
+              <select id="hapticEnabled">
+                <option value="on">Ativada</option>
+                <option value="off">Desativada</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Deadzone joystick
+              <input type="range" min="0" max="45" value="18" id="joyDeadzone" />
+            </label>
+            <div class="small slider-value" id="joyDeadzoneValue">18%</div>
+          </div>
+          <div class="field">
+            <label>Sensibilidade joystick
+              <input type="range" min="60" max="140" value="100" id="joySensitivity" />
+            </label>
+            <div class="small slider-value" id="joySensitivityValue">100%</div>
+          </div>
+          <div class="field">
+            <label>Zoom no celular
+              <input type="range" min="80" max="140" value="100" id="mobileZoom" />
+            </label>
+            <div class="small slider-value" id="mobileZoomValue">100%</div>
+          </div>
+          <div class="field">
+            <label>Tamanho da HUD
+              <select id="hudScale">
+                <option value="normal">Normal</option>
+                <option value="large">Grande</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Contraste da HUD
+              <select id="hudContrast">
+                <option value="normal">Normal</option>
+                <option value="high">Alto</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Seed da run
+              <input type="text" id="seedInput" maxlength="32" placeholder="AUTO" />
+            </label>
+          </div>
+          <div class="field keybind-section">
+            <div class="title-mini">Teclas (clique e pressione)</div>
+            <div class="keybind-grid" id="keybindGrid" role="group" aria-label="Mapeamento de teclas"></div>
+            <div class="small">Clique numa ação, pressione até 3 teclas e Enter para confirmar.</div>
+          </div>
+          <div class="field small settings-touch-note">
+            Mobile: layout dos botões, offset, deadzone, sensibilidade, zoom, vibração e mão dominante afetam só o modo touch.
+          </div>
+          <div class="field small">
+            Teclas: WASD/Setas mover, Shift correr, C agachar, E isca, Q atirar/faca/soco, X troca faca/arma, R recarregar, P/Esc pause.
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-info">
+        <div class="title-mini">Painel em tempo real</div>
+        <div class="stat"><span>Fase</span><span id="cfgPhase">1</span></div>
+        <div class="stat"><span>Respawns</span><span id="cfgLives">INF</span></div>
+        <div class="stat"><span>Pontos</span><span id="cfgScore">0</span></div>
+        <div class="stat"><span>Tempo</span><span id="cfgTime">0:00</span></div>
+        <div class="stat"><span>Visibilidade</span><span id="cfgVis">0%</span></div>
+        <div class="stat"><span>Barulho</span><span id="cfgNoi">0%</span></div>
+        <div class="stat"><span>Status</span><span id="cfgStatus">MENU</span></div>
+        <div class="stat"><span>Secundários</span><span id="cfgObj">0/0</span></div>
+        <div class="stat"><span>Seed</span><span id="cfgSeed">AUTO</span></div>
+      </div>
+
+      <div class="actions">
+        <button id="seedApplyBtn">Aplicar Seed</button>
+        <button id="keybindResetBtn" type="button">Restaurar teclas padrão</button>
+        <button id="laserCalibOpenBtn" type="button" class="hidden">Calibrar laser (supers)</button>
+        <button id="clearRankFromSettingsBtn">Limpar Ranking</button>
+        <button id="settingsCloseBtn">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="laserCalibModal" aria-hidden="true">
+    <div class="modal-card laser-calib-card">
+      <h2>Calibrar laser dos supers</h2>
+      <p class="small laser-calib-lead">Ajuste os pontos sobre os olhos de cada personagem/pose. Salvar grava só no seu navegador (modo dev) para testar; copie o bloco de texto e cole em <code>SUPER_EYE_LOCAL</code> no código para valer para todos. Jogadores normais usam só os valores do código.</p>
+
+      <div class="laser-calib-layout">
+        <div class="laser-calib-preview-wrap">
+          <canvas id="laserCalibCanvas" width="320" height="320" aria-label="Prévia do laser"></canvas>
+          <div class="small">Prévia — linhas vermelhas = laser</div>
+        </div>
+
+        <div class="laser-calib-controls">
+          <div class="field">
+            <label>Personagem
+              <select id="laserCalibCharacter">
+                <option value="homelander">Homelander</option>
+                <option value="butcher">Butcher</option>
+                <option value="thor">Thor</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Pose
+              <select id="laserCalibPose">
+                <option value="stand">Parado</option>
+                <option value="alt">Voo / Dash</option>
+              </select>
+            </label>
+          </div>
+          <div class="field">
+            <label>Direção da prévia (°)
+              <input type="range" id="laserCalibDir" min="0" max="359" value="135" />
+            </label>
+            <div class="small slider-value" id="laserCalibDirValue">135°</div>
+          </div>
+
+          <div class="laser-calib-eye-grid">
+            <div class="laser-calib-eye-block">
+              <div class="title-mini">Olho esquerdo</div>
+              <div class="field">
+                <label>X (lx) <input type="range" id="laserCalibLeftLx" min="-40" max="40" step="0.5" /></label>
+                <div class="small slider-value" id="laserCalibLeftLxValue">0</div>
+              </div>
+              <div class="field">
+                <label>Y (ly) <input type="range" id="laserCalibLeftLy" min="-40" max="40" step="0.5" /></label>
+                <div class="small slider-value" id="laserCalibLeftLyValue">0</div>
+              </div>
+            </div>
+            <div class="laser-calib-eye-block">
+              <div class="title-mini">Olho direito</div>
+              <div class="field">
+                <label>X (lx) <input type="range" id="laserCalibRightLx" min="-40" max="40" step="0.5" /></label>
+                <div class="small slider-value" id="laserCalibRightLxValue">0</div>
+              </div>
+              <div class="field">
+                <label>Y (ly) <input type="range" id="laserCalibRightLy" min="-40" max="40" step="0.5" /></label>
+                <div class="small slider-value" id="laserCalibRightLyValue">0</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Valores (copie e envie)
+              <textarea id="laserCalibExport" rows="8" readonly spellcheck="false"></textarea>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="laserCalibMirrorBtn">Espelhar esq. → dir.</button>
+        <button type="button" id="laserCalibResetBtn">Restaurar padrão</button>
+        <button type="button" id="laserCalibCopyBtn">Copiar valores</button>
+        <button type="button" id="laserCalibSaveBtn">Salvar</button>
+        <button type="button" id="laserCalibCloseBtn">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="modeLoreModal" aria-hidden="true" aria-labelledby="modeLoreTitle">
+    <div class="mode-lore-shell">
+      <div class="mode-lore-gallery">
+        <figure class="mode-lore-asset">
+          <figcaption class="mode-lore-asset-label">Wallpaper</figcaption>
+          <div class="mode-lore-asset-frame mode-lore-asset-frame-wallpaper">
+            <img class="mode-lore-asset-img mode-lore-wallpaper-img" id="modeLoreWallpaper" alt="" />
+          </div>
+          <p class="mode-lore-asset-hint">Segure a imagem para salvar no celular · clique direito no PC</p>
+          <a class="mode-lore-download" id="modeLoreWallpaperDl" href="#" download>Baixar wallpaper</a>
+        </figure>
+        <figure class="mode-lore-asset">
+          <figcaption class="mode-lore-asset-label">Personagem</figcaption>
+          <div class="mode-lore-asset-frame mode-lore-asset-frame-sprite">
+            <img class="mode-lore-asset-img mode-lore-sprite-img" id="modeLoreSprite" alt="" />
+          </div>
+          <p class="mode-lore-asset-hint">Segure a imagem para salvar no celular · clique direito no PC</p>
+          <a class="mode-lore-download" id="modeLoreSpriteDl" href="#" download>Baixar sprite</a>
+        </figure>
+      </div>
+      <div class="mode-lore-panel">
+        <div class="mode-lore-tagline" id="modeLoreTagline"></div>
+        <h2 class="mode-lore-title" id="modeLoreTitle">História</h2>
+        <div class="mode-lore-body" id="modeLoreBody"></div>
+        <button class="menu-big-btn mode-lore-close" id="modeLoreCloseBtn" type="button">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden shop-art-lightbox" id="shopArtLightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="shopArtLightboxTitle">
+    <div class="shop-art-lightbox-panel">
+      <button class="shop-art-lightbox-close" id="shopArtLightboxCloseBtn" type="button" aria-label="Fechar">×</button>
+      <p class="shop-art-lightbox-title" id="shopArtLightboxTitle"></p>
+      <div class="shop-art-lightbox-frame">
+        <img class="shop-art-lightbox-img" id="shopArtLightboxImg" alt="" />
+      </div>
+    </div>
+  </div>
+
+  <script src="js/meta-systems.js?v=20260620"></script>
+  <script src="game.js?v=20260624"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    }
+  </script>
+</body>
+</html>

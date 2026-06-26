@@ -1,0 +1,18 @@
+{
+  "name": "Stealth Ops",
+  "short_name": "StealthOps",
+  "description": "Infiltração procedural no navegador — PC ou celular.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#071018",
+  "theme_color": "#071018",
+  "orientation": "landscape-primary",
+  "icons": [
+    {
+      "src": "assets/sprites/capa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "stealth-ops",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes serve . -l 3000",
+    "postinstall": "playwright install chromium",
+    "test:balance": "node tests/run-balance.mjs",
+    "test:audio": "node tests/run-audio.mjs",
+    "test:smoke": "node tests/run-smoke.mjs",
+    "test:sim": "node tests/run-sim.mjs",
+    "test:touch": "node tests/run-touch-controls.mjs",
+    "test:gameplay": "node tests/run-gameplay-battery.mjs",
+    "test:perf": "node tests/run-homelander-perf.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.52.0"
+  }
+}
