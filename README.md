@@ -1,41 +1,82 @@
-﻿# Stealth Ops (NoScape)
+# Stealth Ops (NoScape)
 
-> Jogo web stealth com fases procedurais e ranking local.
+Jogo de ação furtiva procedural para navegador, com campanha, survivor, sistemas de visibilidade e ruído, ranking, conquistas e controles touch.
 
-## Sobre o projeto
+## Requisitos
 
-Jogo de acao furtiva com fases geradas proceduralmente a cada partida. Combina mecanicas de stealth, controle de visibilidade e barulho, uso de iscas e armas, modos campanha e survivor, ranking local, conquistas e configuracoes de dificuldade. Controles para teclado e touch mobile.
+- Node.js e npm para servidor local e testes
+- Chromium instalado pelo `postinstall` do Playwright
 
-## Funcionalidades principais
+## Funcionalidades
 
-- Fases procedurais com seed reproduzivel
-- Modos campanha e survivor
-- Sistema de visibilidade, barulho e iscas
-- Ranking local e conquistas
-- Selecao de personagens e configuracao de dificuldade
-- Controles teclado e touch com suporte landscape mobile
+- Geração procedural por seed
+- Campanha e survivor
+- Visibilidade, ruído, iscas e armas
+- Ranking e conquistas locais
+- Teclado e touch
+- PWA/service worker
 
-## Tecnologias utilizadas
+## Tecnologias
 
-- HTML
+- HTML5 Canvas
 - CSS
-- JavaScript
-- Netlify
+- JavaScript ES modules
+- Playwright
 
-## Como executar
+## Instalação
 
-Abra index.html no navegador.
+```bash
+npm install
+```
 
-## Deploy / Demonstracao
+## Scripts disponíveis
 
-https://scapenow.netlify.app/
+- `npm run dev`
+- `npm run test:balance`
+- `npm run test:audio`
+- `npm run test:smoke`
+- `npm run test:sim`
+- `npm run test:touch`
+- `npm run test:gameplay`
+- `npm run test:perf`
 
-## Repositorio
+Execute somente os scripts listados acima; eles foram conferidos no `package.json`.
 
-[github.com/thomasrangelbugs/noscape](https://github.com/thomasrangelbugs/noscape)
+## Estrutura principal
 
-## Autor
+- `index.html — shell`
+- `game.js — motor principal`
+- `js/ — módulos`
+- `assets/ — mídia`
+- `tests/ — baterias Playwright/Node`
+- `sw.js e manifest.json — PWA`
+- `netlify.toml — publicação`
 
-**Thomas Rangel Bugs**
+## Como usar
 
-Desenvolvido para portfolio, estudo e pratica de desenvolvimento web/mobile.
+- Execute `npm run dev` e abra a porta 3000.
+- Escolha modo, personagem e dificuldade.
+- Use stealth, ruído e recursos para completar o objetivo.
+
+## Dados e persistência
+
+- Ranking, configurações e progresso usam armazenamento local do navegador.
+
+## Testes e validação
+
+- Execute individualmente os scripts `test:*` listados; não há agregador `npm test`.
+- O `postinstall` baixa Chromium e exige rede/espaço em disco.
+
+## Publicação
+
+- O `netlify.toml` publica `.` sem build e configura cache de JS, CSS, HTML, service worker e assets.
+
+## Limitações
+
+- Limpar os dados do navegador remove progresso local.
+- Áudio e PWA dependem das políticas do navegador.
+- A suíte pode ser custosa por instalar/usar Chromium.
+
+## Repositório
+
+[redobrai-del/thomas-projetos](https://github.com/redobrai-del/thomas-projetos)
