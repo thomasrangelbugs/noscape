@@ -11,7 +11,7 @@
   <title>Stealth Ops - Procedural Loop</title>
   <link rel="icon" href="assets/sprites/capa.png" type="image/png" />
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="styles.css?v=20260624" />
+  <link rel="stylesheet" href="styles.css?v=20260727" />
 </head>
 <body>
   <div class="wrap">
@@ -198,6 +198,14 @@
         <div class="menu-daily-challenge">
           <div class="small" id="dailyChallengeLabel">Desafio diário</div>
           <button class="menu-tower-btn daily" id="dailyChallengeBtn" type="button">Jogar desafio do dia</button>
+        </div>
+        <div class="menu-offline-download">
+          <div class="small">Baixar para jogar sem internet</div>
+          <p class="menu-offline-hint">Instale no aparelho e use só localmente / offline.</p>
+          <div class="menu-offline-row">
+            <button class="menu-tower-btn offline" id="downloadMobileBtn" type="button">Celular</button>
+            <button class="menu-tower-btn offline" id="downloadPcBtn" type="button">PC</button>
+          </div>
         </div>
         <div class="menu-home-achievements">
           <div class="small">Conquistas</div>
@@ -701,8 +709,28 @@
     </div>
   </div>
 
+  <div class="modal hidden" id="offlineDownloadModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="offlineDownloadTitle">
+    <div class="modal-card offline-download-card">
+      <h2 id="offlineDownloadTitle">Baixar jogo</h2>
+      <p class="menu-sub" id="offlineDownloadLead">Instale no aparelho para jogar sem internet.</p>
+      <ol class="offline-download-steps small" id="offlineDownloadSteps"></ol>
+      <div class="offline-download-actions">
+        <button class="menu-tower-btn primary" id="offlineInstallBtn" type="button">Instalar app</button>
+        <button class="menu-tower-btn offline" id="offlineCacheBtn" type="button">Baixar conteúdo offline (~100 MB)</button>
+      </div>
+      <div class="offline-download-progress hidden" id="offlineDownloadProgress" aria-live="polite">
+        <div class="offline-progress-track">
+          <div class="offline-progress-bar" id="offlineProgressBar"></div>
+        </div>
+        <p class="small" id="offlineProgressLabel">Preparando…</p>
+      </div>
+      <p class="small offline-download-status" id="offlineDownloadStatus"></p>
+      <button class="menu-link" id="offlineDownloadCloseBtn" type="button">Fechar</button>
+    </div>
+  </div>
+
   <script src="js/meta-systems.js?v=20260620"></script>
-  <script src="game.js?v=20260624"></script>
+  <script src="game.js?v=20260727"></script>
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("sw.js").catch(function () {});

@@ -80,6 +80,22 @@
     const menuCoverBtn = document.getElementById("menuCoverBtn");
     const towerPlayBtn = document.getElementById("towerPlayBtn");
     const towerMenuBtn = document.getElementById("towerMenuBtn");
+    const downloadMobileBtn = document.getElementById("downloadMobileBtn");
+    const downloadPcBtn = document.getElementById("downloadPcBtn");
+    const offlineDownloadModal = document.getElementById("offlineDownloadModal");
+    const offlineDownloadTitle = document.getElementById("offlineDownloadTitle");
+    const offlineDownloadLead = document.getElementById("offlineDownloadLead");
+    const offlineDownloadSteps = document.getElementById("offlineDownloadSteps");
+    const offlineInstallBtn = document.getElementById("offlineInstallBtn");
+    const offlineCacheBtn = document.getElementById("offlineCacheBtn");
+    const offlineDownloadProgress = document.getElementById("offlineDownloadProgress");
+    const offlineProgressBar = document.getElementById("offlineProgressBar");
+    const offlineProgressLabel = document.getElementById("offlineProgressLabel");
+    const offlineDownloadStatus = document.getElementById("offlineDownloadStatus");
+    const offlineDownloadCloseBtn = document.getElementById("offlineDownloadCloseBtn");
+    let deferredInstallPrompt = null;
+    let offlineDownloadPlatform = "mobile";
+    let offlineCacheBusy = false;
     const familyBackBtn = document.getElementById("familyBackBtn");
     const familyNextBtn = document.getElementById("familyNextBtn");
     const runtypeBackBtn = document.getElementById("runtypeBackBtn");
@@ -7826,6 +7842,213 @@
       syncMusicState();
       sfxClick();
       syncFullscreenLayout();
+    }
+
+    function isStandaloneApp() {
+      return window.matchMedia("(display-mode: standalone)").matches
+        || window.navigator.standalone === true;
+    }
+
+    function isIosDevice() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent)
+        || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    }
+
+    function setOfflineStatus(text) {
+      if (offlineDownloadStatus) offlineDownloadStatus.textContent = text || "";
+    }
+
+    function setOfflineProgress(done, total) {
+      if (!offlineDownloadProgress || !offlineProgressBar || !offlineProgressLabel) return;
+      offlineDownloadProgress.classList.remove("hidden");
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      offlineProgressBar.style.width = pct + "%";
+      offlineProgressLabel.textContent = total > 0
+        ? `Baixando ${done}/${total} (${pct}%)`
+        : "Preparando…";
+    }
+
+    function refreshOfflineInstallButton() {
+      if (!offlineInstallBtn) return;
+      if (isStandaloneApp()) {
+        offlineInstallBtn.textContent = "App já instalado";
+        offlineInstallBtn.disabled = true;
+        return;
+      }
+      offlineInstallBtn.disabled = false;
+      if (deferredInstallPrompt) {
+        offlineInstallBtn.textContent = offlineDownloadPlatform === "pc"
+          ? "Instalar no PC"
+          : "Instalar no celular";
+        return;
+      }
+      if (isIosDevice()) {
+        offlineInstallBtn.textContent = "Ver passos do iPhone";
+        return;
+      }
+      offlineInstallBtn.textContent = "Instalar app (Chrome/Edge)";
+    }
+
+    function fillOfflineDownloadSteps(platform) {
+      if (!offlineDownloadSteps) return;
+      offlineDownloadSteps.innerHTML = "";
+      const steps = platform === "pc"
+        ? [
+            "No Chrome ou Edge, toque em Instalar no PC (ou use o ícone ⊕ na barra de endereço).",
+            "Depois toque em Baixar conteúdo offline (uma vez, com internet).",
+            "Abra o app pelo atalho da área de trabalho — funciona sem internet."
+          ]
+        : isIosDevice()
+          ? [
+              "No Safari, toque em Compartilhar → Adicionar à Tela de Início.",
+              "Abra o ícone Stealth Ops na tela inicial.",
+              "Com internet, toque em Baixar conteúdo offline uma vez."
+            ]
+          : [
+              "Toque em Instalar no celular (Chrome/Android) ou use o menu do navegador → Instalar app.",
+              "Com internet, toque em Baixar conteúdo offline uma vez.",
+              "Abra pelo ícone da tela inicial — joga sem internet / só local."
+            ];
+      for (const text of steps) {
+        const li = document.createElement("li");
+        li.textContent = text;
+        offlineDownloadSteps.appendChild(li);
+      }
+    }
+
+    function openOfflineDownloadModal(platform) {
+      offlineDownloadPlatform = platform === "pc" ? "pc" : "mobile";
+      if (!offlineDownloadModal) return;
+      if (offlineDownloadTitle) {
+        offlineDownloadTitle.textContent = platform === "pc"
+          ? "Baixar no PC"
+          : "Baixar no celular";
+      }
+      if (offlineDownloadLead) {
+        offlineDownloadLead.textContent = platform === "pc"
+          ? "Instale como app no computador para jogar offline ou só localmente."
+          : "Instale na tela inicial do celular para jogar offline ou só localmente.";
+      }
+      fillOfflineDownloadSteps(offlineDownloadPlatform);
+      refreshOfflineInstallButton();
+      setOfflineStatus(isStandaloneApp()
+        ? "App já instalado neste aparelho. Baixe o conteúdo offline se ainda não fez."
+        : "");
+      if (offlineDownloadProgress) offlineDownloadProgress.classList.add("hidden");
+      if (offlineProgressBar) offlineProgressBar.style.width = "0%";
+      offlineDownloadModal.classList.remove("hidden");
+      offlineDownloadModal.setAttribute("aria-hidden", "false");
+    }
+
+    function closeOfflineDownloadModal() {
+      if (!offlineDownloadModal) return;
+      offlineDownloadModal.classList.add("hidden");
+      offlineDownloadModal.setAttribute("aria-hidden", "true");
+    }
+
+    async function ensureServiceWorkerReady() {
+      if (!("serviceWorker" in navigator)) return null;
+      try {
+        const reg = await navigator.serviceWorker.register("sw.js");
+        return reg.ready;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function downloadOfflineContent() {
+      if (offlineCacheBusy) return;
+      offlineCacheBusy = true;
+      if (offlineCacheBtn) offlineCacheBtn.disabled = true;
+      setOfflineStatus("Listando arquivos…");
+      setOfflineProgress(0, 0);
+
+      try {
+        const listRes = await fetch("offline-assets.json", { cache: "no-store" });
+        if (!listRes.ok) throw new Error("lista indisponível");
+        const urls = await listRes.json();
+        if (!Array.isArray(urls) || !urls.length) throw new Error("lista vazia");
+
+        const reg = await ensureServiceWorkerReady();
+        if (reg && reg.active) {
+          const total = urls.length;
+          setOfflineProgress(0, total);
+
+          await new Promise((resolve, reject) => {
+            let settled = false;
+            const finish = (fn, value) => {
+              if (settled) return;
+              settled = true;
+              clearTimeout(timer);
+              navigator.serviceWorker.removeEventListener("message", onMessage);
+              fn(value);
+            };
+            const onMessage = (event) => {
+              const data = event.data || {};
+              if (data.type === "OFFLINE_CACHE_PROGRESS") {
+                setOfflineProgress(data.done || 0, data.total || total);
+              }
+              if (data.type === "OFFLINE_CACHE_DONE") {
+                finish(resolve, data);
+              }
+            };
+            const timer = setTimeout(() => {
+              finish(reject, new Error("tempo esgotado"));
+            }, 15 * 60 * 1000);
+            navigator.serviceWorker.addEventListener("message", onMessage);
+            reg.active.postMessage({ type: "PRECACHE_OFFLINE", urls });
+          });
+        } else {
+          // Fallback: cache direto no navegador se o SW não estiver ativo.
+          const cache = await caches.open("stealth-ops-v20260727");
+          let done = 0;
+          for (const url of urls) {
+            try {
+              const res = await fetch(url, { cache: "reload" });
+              if (res && res.ok) await cache.put(url, res.clone());
+            } catch (_) { /* continue */ }
+            done += 1;
+            setOfflineProgress(done, urls.length);
+          }
+        }
+
+        setOfflineStatus("Pronto. Pode jogar sem internet pelo app instalado.");
+        setHint("Conteúdo offline baixado.", 1.4);
+      } catch (err) {
+        setOfflineStatus("Falha no download. Conecte-se e tente de novo.");
+        setHint("Não foi possível baixar o pacote offline.", 1.6);
+      } finally {
+        offlineCacheBusy = false;
+        if (offlineCacheBtn) offlineCacheBtn.disabled = false;
+      }
+    }
+
+    async function promptInstallApp() {
+      if (isStandaloneApp()) {
+        setOfflineStatus("Este aparelho já está com o app instalado.");
+        return;
+      }
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        try {
+          const choice = await deferredInstallPrompt.userChoice;
+          if (choice && choice.outcome === "accepted") {
+            setOfflineStatus("Instalação iniciada. Depois baixe o conteúdo offline.");
+          } else {
+            setOfflineStatus("Instalação cancelada.");
+          }
+        } catch (_) {
+          setOfflineStatus("Não foi possível abrir o instalador.");
+        }
+        deferredInstallPrompt = null;
+        refreshOfflineInstallButton();
+        return;
+      }
+      if (isIosDevice()) {
+        setOfflineStatus("No iPhone/iPad: Safari → Compartilhar → Adicionar à Tela de Início.");
+        return;
+      }
+      setOfflineStatus("Abra no Chrome ou Edge e use o menu do navegador → Instalar app / Instalar Stealth Ops.");
     }
 
     function closeMenu() {
@@ -19114,6 +19337,57 @@
           toggleFullscreenMode();
         });
       }
+
+      if (downloadMobileBtn) {
+        downloadMobileBtn.addEventListener("click", () => {
+          ensureAudio();
+          sfxClick();
+          openOfflineDownloadModal("mobile");
+        });
+      }
+      if (downloadPcBtn) {
+        downloadPcBtn.addEventListener("click", () => {
+          ensureAudio();
+          sfxClick();
+          openOfflineDownloadModal("pc");
+        });
+      }
+      if (offlineInstallBtn) {
+        offlineInstallBtn.addEventListener("click", () => {
+          ensureAudio();
+          sfxClick();
+          promptInstallApp();
+        });
+      }
+      if (offlineCacheBtn) {
+        offlineCacheBtn.addEventListener("click", () => {
+          ensureAudio();
+          sfxClick();
+          downloadOfflineContent();
+        });
+      }
+      if (offlineDownloadCloseBtn) {
+        offlineDownloadCloseBtn.addEventListener("click", () => {
+          sfxClick();
+          closeOfflineDownloadModal();
+        });
+      }
+      if (offlineDownloadModal) {
+        offlineDownloadModal.addEventListener("click", (e) => {
+          if (e.target === offlineDownloadModal) closeOfflineDownloadModal();
+        });
+      }
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredInstallPrompt = e;
+        refreshOfflineInstallButton();
+      });
+      window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        refreshOfflineInstallButton();
+        setOfflineStatus("App instalado. Baixe o conteúdo offline para jogar sem internet.");
+      });
 
       settingsCloseBtn.addEventListener("click", () => {
         closeSettings();

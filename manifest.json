@@ -1,8 +1,9 @@
 {
   "name": "Stealth Ops",
   "short_name": "StealthOps",
-  "description": "Infiltração procedural no navegador — PC ou celular.",
+  "description": "Infiltração procedural no navegador — PC ou celular. Instale para jogar offline.",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#071018",
   "theme_color": "#071018",
@@ -13,6 +14,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "assets/sprites/capa.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
