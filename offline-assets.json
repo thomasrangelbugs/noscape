@@ -151,5 +151,9 @@
     "./assets/textures/floor-reactor-realistic.png",
     "./assets/textures/floor-security-realistic.png",
     "./assets/textures/floor-server-realistic.png",
-    "./assets/textures/floor-vault-realistic.png"
+    "./assets/textures/floor-vault-realistic.png",
+    "./assets/icons/app-icon-source.png",
+    "./assets/icons/icon-192.png",
+    "./assets/icons/icon-512.png",
+    "./assets/icons/icon-512-maskable.png"
 ]

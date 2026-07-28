@@ -9,7 +9,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Stealth Ops - Procedural Loop</title>
-  <link rel="icon" href="assets/sprites/capa.png" type="image/png" />
+  <link rel="icon" href="assets/icons/icon-192.png" type="image/png" />
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css?v=20260727" />
 </head>
@@ -733,7 +734,10 @@
   <script src="game.js?v=20260727"></script>
   <script>
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch(function () {});
+      navigator.serviceWorker.register("sw.js", {
+        scope: "./",
+        updateViaCache: "none"
+      }).catch(function () {});
     }
   </script>
 </body>

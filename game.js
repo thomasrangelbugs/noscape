@@ -7949,7 +7949,11 @@
     async function ensureServiceWorkerReady() {
       if (!("serviceWorker" in navigator)) return null;
       try {
-        const reg = await navigator.serviceWorker.register("sw.js");
+        const reg = await navigator.serviceWorker.register("sw.js", {
+          scope: "./",
+          updateViaCache: "none"
+        });
+        await reg.update().catch(() => {});
         return reg.ready;
       } catch (_) {
         return null;
@@ -7974,7 +7978,7 @@
           const total = urls.length;
           setOfflineProgress(0, total);
 
-          await new Promise((resolve, reject) => {
+          const result = await new Promise((resolve, reject) => {
             let settled = false;
             const finish = (fn, value) => {
               if (settled) return;
@@ -7998,18 +8002,29 @@
             navigator.serviceWorker.addEventListener("message", onMessage);
             reg.active.postMessage({ type: "PRECACHE_OFFLINE", urls });
           });
+          if (result && result.failed > 0) {
+            throw new Error(`${result.failed} arquivo(s) não puderam ser salvos`);
+          }
         } else {
           // Fallback: cache direto no navegador se o SW não estiver ativo.
-          const cache = await caches.open("stealth-ops-v20260727");
+          const cache = await caches.open("stealth-ops-offline-v1");
           let done = 0;
+          let failed = 0;
           for (const url of urls) {
             try {
               const res = await fetch(url, { cache: "reload" });
-              if (res && res.ok) await cache.put(url, res.clone());
-            } catch (_) { /* continue */ }
+              if (res && res.ok) {
+                await cache.put(url, res.clone());
+              } else {
+                failed += 1;
+              }
+            } catch (_) {
+              failed += 1;
+            }
             done += 1;
             setOfflineProgress(done, urls.length);
           }
+          if (failed > 0) throw new Error(`${failed} arquivo(s) não puderam ser salvos`);
         }
 
         setOfflineStatus("Pronto. Pode jogar sem internet pelo app instalado.");

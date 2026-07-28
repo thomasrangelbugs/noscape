@@ -8,6 +8,7 @@
     "test:balance": "node tests/run-balance.mjs",
     "test:audio": "node tests/run-audio.mjs",
     "test:smoke": "node tests/run-smoke.mjs",
+    "test:pwa": "node tests/run-pwa.mjs",
     "test:sim": "node tests/run-sim.mjs",
     "test:touch": "node tests/run-touch-controls.mjs",
     "test:gameplay": "node tests/run-gameplay-battery.mjs",
